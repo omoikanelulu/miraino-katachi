@@ -1,2 +1,2 @@
-# mirai-public
-未来のかたち学習用
+# miraino-katachi
+課題用のリモートリポジトリ

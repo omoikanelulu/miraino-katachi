@@ -1,5 +1,7 @@
 <?php
 require_once('./variables.php');
+require_once('./class/db/Base.php');
+require_once('./class/db/TodoItems.php');
 
 session_start();
 session_regenerate_id(true);
@@ -11,23 +13,10 @@ $datetime = $datetime->format('Y-m-d');
 
 try {
     // DBへの接続
-    $dsn = 'mysql:dbname=php_work;host=localhost;port=3306;charset=utf8';
-    $user = 'root';
-    $password = '0971790';
-    $dbh = new PDO($dsn, $user, $password);
-    $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $db = new TodoItems;
 
     // SQLでDBエンジンに指示
-    $sql = 'SELECT * FROM todo_items ORDER BY expiration_date ASC';
-    $stmt = $dbh->prepare($sql);
-
-    $stmt->execute();
-
-    // DBから切断
-    $dbh = null;
-
-    // 取得したレコードを連想配列として変数に代入する
-    $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $lists = $db->dbAllSelect();
 } catch (Exception $e) {
     var_dump($e->getMessage());
     echo '<br><br>';

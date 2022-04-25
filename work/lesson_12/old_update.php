@@ -1,7 +1,5 @@
 <?php
 require_once('./variables.php');
-require_once('./class/db/Base.php');
-require_once('./class/db/TodoItems.php');
 
 session_start();
 session_regenerate_id(true);
@@ -30,21 +28,39 @@ if (!isset($userdata) || $userdata['error'] != 0) {
 
 $fp = fopen($userdata['tmp_name'], 'r');
 
-$line = fgetcsv($fp);
-
 try {
-    $db = new TodoItems();
+    // UPDATE SET WHERE
+    // DBへの接続
+    $dsn = 'mysql:dbname=php_work;host=localhost;port=3306;charset=utf8';
+    $user = 'root';
+    $password = '0971790';
+    $dbh = new PDO($dsn, $user, $password);
+    $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // SQLでDBエンジンに指示
+    // $sql文でデータベースに指令を出す
+    $sql = 'UPDATE todo_items SET expiration_date=:expiration_date, todo_item=:todo_item, is_completed=:is_completed WHERE id=:id';
+
+    $stmt = $dbh->prepare($sql);
 
     while (($line = fgetcsv($fp)) !== false) {
-        $db->dbCsvUpdate($line[0], $line[1], mb_convert_encoding($line[2], 'UTF-8', 'SJIS-win'), $line[3]);
+        $stmt->bindValue(':id', $line[0], PDO::PARAM_INT);
+        $stmt->bindValue(':expiration_date', $line[1], PDO::PARAM_STR);
+        $stmt->bindValue(':todo_item', mb_convert_encoding($line[2], 'UTF-8', 'SJIS-win'), PDO::PARAM_STR);
+        $stmt->bindValue(':is_completed', $line[3], PDO::PARAM_INT);
+
+        $stmt->execute();
     }
 
-    // 成功時のメッセージを代入
+
     $_SESSION['success']['msg'] = $s_msg;
     header('Location:./upload.php');
+
+
+    // DBから切断
+    $dbh = null;
 } catch (Exception $e) {
-    // 失敗時のメッセージを代入
     $_SESSION['err']['msg'] = $e_msg;
-    header('Location:./upload.php');
+    header('Location:./index.php');
     exit();
 }

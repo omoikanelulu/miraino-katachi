@@ -1,7 +1,7 @@
 <?php
 require_once('./variables.php');
 require_once('./class/db/Base.php');
-require_once('./class/db/Todoitems.php');
+require_once('./class/db/TodoItems.php');
 
 session_start();
 session_regenerate_id(true);
@@ -22,7 +22,7 @@ try {
     // $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     ////////////////////////////////
 
-    // Todoitems.phpのメソッドにした
+    // TodoItems.phpのメソッドにした
     // $sql = 'INSERT INTO todo_items (expiration_date,todo_item) VALUES (:expiration_date,:todo_item)';
     // $stmt = $dbh->prepare($sql);
     // $stmt->bindValue(':expiration_date', $_POST['expiration_date'], PDO::PARAM_STR);

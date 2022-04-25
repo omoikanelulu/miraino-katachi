@@ -1,7 +1,7 @@
 <?php
 require_once('./variables.php');
 require_once('./class/db/Base.php');
-require_once('./class/db/Todoitems.php');
+require_once('./class/db/TodoItems.php');
 
 session_start();
 session_regenerate_id(true);
@@ -15,13 +15,6 @@ $datetime = $datetime->format('Y-m-d');
 try {
     $db = new TodoItems;
     $lists = $db->dbAllSelect();
-
-    // $sql = 'SELECT * FROM todo_items ORDER BY expiration_date ASC';
-    // $stmt = $dbh->prepare($sql);
-    // $stmt->execute();
-    // $dbh = null;
-
-    // $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     var_dump($e->getMessage());
     echo '<br><br>';

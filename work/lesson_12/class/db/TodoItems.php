@@ -25,7 +25,7 @@ class TodoItems extends Base
     }
 
     /**
-     * 一覧を取得する
+     * 一覧を取得しreturnする
      */
     public function dbAllSelect()
     {
@@ -64,6 +64,26 @@ class TodoItems extends Base
         $stmt = $this->dbh->prepare($sql);
         $stmt->bindValue(':is_completed', $_POST['is_completed'], PDO::PARAM_INT);
         $stmt->bindValue(':id', $_POST['id'], PDO::PARAM_INT);
+        $stmt->execute();
+
+        $this->dbh = null;
+    }
+
+    /**
+     * csvファイルからUPDATEする
+     */
+    public function dbCsvUpdate(int $id, string $expiration_date, string $todo_item, int $is_completed)
+    {
+        $sql = 'UPDATE todo_items SET expiration_date=:expiration_date, todo_item=:todo_item, is_completed=:is_completed WHERE id=:id';
+        // $sql = 'UPDATE todo_items SET expiration_date=:expiration_date, todo_item=:todo_item, is_completed=:is_completed';
+        // $sql .= 'WHERE id = :id';
+
+        $stmt = $this->dbh->prepare($sql);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->bindValue(':expiration_date', $expiration_date, PDO::PARAM_STR);
+        $stmt->bindValue(':todo_item', $todo_item, PDO::PARAM_STR);
+        $stmt->bindValue(':is_completed', $is_completed, PDO::PARAM_INT);
+
         $stmt->execute();
 
         $this->dbh = null;

@@ -1,21 +1,18 @@
 <?php
-require_once('../class/db/Base.php');
-require_once('../class/db/Users.php');
-require_once('../class/db/TodoItems.php');
-require_once('../class/util/Security.php');
-Security::session();
-Security::notLogin();
+try {
+    require_once('../class/db/Base.php');
+    require_once('../class/db/Users.php');
+    require_once('../class/db/TodoItems.php');
+    require_once('../class/util/Security.php');
+    Security::session();
+    Security::notLogin();
 
-$todoIns = new TodoItems;
-$todoItem = $todoIns->dbDeleteConfirmation($_POST['id']);
-
-
-// デバッグ用 //
-var_dump($todoItem);
-exit();
-////////////////
-
-
+    $todoIns = new TodoItems;
+    $todoItem = $todoIns->dbConfirmation($_POST['item_id']);
+} catch (Exception $e) {
+    header('Location:../error/error.php');
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -70,7 +67,7 @@ exit();
                 </li>
             </ul>
             <form class="form-inline my-2 my-lg-0" action="./" method="get">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search" value="">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search" maxlength="100">
                 <button class="btn btn-outline-light my-2 my-sm-0" type="submit">検索</button>
             </form>
         </div>
@@ -94,20 +91,21 @@ exit();
                 <form action="./delete_action.php" method="post">
                     <div class="form-group">
                         <label for="item_name">項目名</label>
-                        <p name="item_name" id="item_name" class="form-control">項目</p>
+                        <p name="item_name" id="item_name" class="form-control"><?= $todoItem['item_name'] ?></p>
                     </div>
                     <div class="form-group">
                         <label for="user_id">担当者</label>
-                        <p name="user_id" id="user_id" class="form-control">テスト花子</p>
+                        <p name="user_id" id="user_id" class="form-control"><?= $todoItem['family_name'] . $todoItem['first_name'] ?></p>
                     </div>
                     <div class="form-group">
                         <label for="expire_date">期限</label>
-                        <p class="form-control" id="expire_date" name="expire_date">2020-02-19
+                        <p class="form-control" id="expire_date" name="expire_date"><?= $todoItem['expire_date'] ?>
                     </div>
                     <div class="form-group form-check">
-                        <input type="checkbox" class="form-check-input" id="finished" name="finished" value="1" checked disabled>
+                        <input type="checkbox" class="form-check-input" disabled="disabled" id="finished" name="finished" <?= isset($todoItem['finished_date']) ? 'checked' : '' ?>>
                         <label for="finished">完了</label>
                     </div>
+                    <input type="hidden" name="id" value="<?= $todoItem['id'] ?>">
 
                     <input type="submit" value="削除" class="btn btn-danger">
                     <input type="button" value="キャンセル" class="btn btn-outline-primary" onclick="location.href='./';">

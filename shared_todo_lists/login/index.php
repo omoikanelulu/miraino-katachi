@@ -1,10 +1,22 @@
 <?php
-require_once('../class/db/Base.php');
-require_once('../class/db/Users.php');
-require_once('../class/util/Security.php');
-Security::session();
-$token = Security::makeToken();
+try {
+    require_once('../class/db/Base.php');
+    require_once('../class/db/Users.php');
+    require_once('../class/util/Security.php');
+    Security::session();
+    $token = Security::makeToken();
 
+    unset($_SESSION['data'], $_SESSION['err']);
+
+    // デバッグ用 //
+    echo '<p>$_SESSIONの中身を表示</p>';
+    var_dump($_SESSION);
+    ////////////////
+
+} catch (Exception $e) {
+    header('Location:../error/error.php');
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -38,35 +50,26 @@ $token = Security::makeToken();
     </nav>
 
     <div class="container">
-        <div class="row my-2">
+        <!-- これいらなくね？ -->
+        <!-- <div class="row my-2">
             <div class="col-sm-3"></div>
             <div class="col-sm-3">
                 <h1></h1>
             </div>
             <div class="col-sm-3"></div>
-        </div>
+        </div> -->
 
-        <?php
-        // デバッグ用 //
-        echo 'セッションの中<br>';
-        var_dump($_SESSION);
-        ////////////////
-        ?>
-
-        <!-- エラーメッセージの表示ブロック -->
-        <!-- おふざけ無しの表示 -->
         <div class="row my-2">
-            <?php if (isset($_SESSION['err']['msg'])) : ?>
+            <?php if (!isset($_SESSION['user'])) : ?>
                 <div class="col-sm-3"></div>
-                <div class="col-sm-6 alert alert-danger alert-dismissble fade show">
-                    <?= $_SESSION['err']['msg'] ?>
-                    <button class="close" data-dismiss="alert">&times;</button>
+                <div class="col-sm-6 alert alert-info">
+                    <h4>ログインして使用してください</h4>
                 </div>
                 <div class="col-sm-3"></div>
             <?php endif ?>
         </div>
 
-        <!-- フシギダネの表示 -->
+        <!-- エラーメッセージの表示ブロック -->
         <div class="row my-2">
             <?php if (isset($_SESSION['err']['msg'])) : ?>
                 <div class="col-sm-3"></div>
@@ -82,6 +85,7 @@ $token = Security::makeToken();
                 <div class="col-sm-3"></div>
             <?php endif ?>
         </div>
+        <!-- エラーメッセージの表示ブロック ここまで -->
 
         <!-- ログイン情報の入力ブロック -->
         <div class="row my-2">
@@ -100,6 +104,23 @@ $token = Security::makeToken();
                     <br>
                     <button type="submit" class="btn btn-primary">ログイン</button>
                 </form>
+            </div>
+            <div class="col-sm-3"></div>
+        </div>
+
+        <div class="row my-2">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-6 alert alert-info">
+                <h4>ユーザ登録はこちら</h4>
+            </div>
+            <div class="col-sm-3"></div>
+        </div>
+
+        <!-- ユーザ登録ブロック -->
+        <div class="row my-2">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-6">
+                <a href="./user_add.php"><button type="submit" class="btn btn-info">ユーザ登録</button></a>
             </div>
             <div class="col-sm-3"></div>
         </div>

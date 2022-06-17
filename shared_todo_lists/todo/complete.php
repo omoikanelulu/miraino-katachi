@@ -7,12 +7,14 @@ try {
     Security::session();
     Security::notLogin();
 
+    $post = Security::sanitize($_POST);
+
     unset($_SESSION['err']['msg'], $_SESSION['success']['msg']);
 
     $todoIns = new TodoItems;
-    $todoIns->dbDelete(1, $_POST['id']);
+    $todoItem = $todoIns->dbIsComp($post);
 
-    $_SESSION['success']['msg'] = '削除しました';
+    // $_SESSION['success']['msg'] = 'こんぐらっちゅれーしょん！';
     header('Location:./index.php');
     exit();
 } catch (Exception $e) {

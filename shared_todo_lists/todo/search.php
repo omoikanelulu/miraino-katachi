@@ -1,10 +1,17 @@
+// このファイルそういえば使用していない！！
+
 <?php
-require_once('../class/db/Base.php');
-require_once('../class/db/Users.php');
-require_once('../class/db/TodoItems.php');
-require_once('../class/util/Security.php');
-Security::session();
-Security::notLogin();
+try {
+    require_once('../class/db/Base.php');
+    require_once('../class/db/Users.php');
+    require_once('../class/db/TodoItems.php');
+    require_once('../class/util/Security.php');
+    Security::session();
+    Security::notLogin();
+} catch (Exception $e) {
+    header('Location:../error/error.php');
+    exit();
+}
 
 ?>
 
@@ -60,7 +67,7 @@ Security::notLogin();
                 </li>
             </ul>
             <form class="form-inline my-2 my-lg-0" action="./" method="get">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search" value="花子">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search" maxlength="100">
                 <button class="btn btn-outline-light my-2 my-sm-0" type="submit">検索</button>
             </form>
         </div>

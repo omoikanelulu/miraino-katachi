@@ -1,26 +1,66 @@
 <?php
-require_once('../class/db/Base.php');
-require_once('../class/db/Users.php');
-require_once('../class/db/TodoItems.php');
-require_once('../class/util/Security.php');
+try {
+    require_once('../class/db/Base.php');
+    require_once('../class/db/Users.php');
+    require_once('../class/db/TodoItems.php');
+    require_once('../class/util/Security.php');
+    require_once('../class/util/Config.php');
+    Security::session();
+    $token = Security::makeToken();
+    $datetime = Config::dateTime();
+    $get = Security::sanitize($_GET);
 
-// これすると常にリダイレクトしちゃってToDo一覧にたどり着かない
-// ログインしていない場合はログイン画面（/login/index.php）へリダイレクト
-// if (empty($_SESSION['user'])) {
-//     header('Location:../login/index.php');
-// }
+    // デバッグ用 //
+    echo '$_GETの中身<br>';
+    var_dump($_GET);
+    echo '<br>';
+    ////////////////
+    unset($_SESSION['post']);
 
-Security::session();
-$token = Security::makeToken();
+    // /ログインされていない場合はログイン画面にリダイレクトする
+    if (empty($_SESSION['user'])) {
+        header('Location:../login/index.php');
+    }
 
-$todoIns = new TodoItems;
-$todoItems = $todoIns->dbAllSelect();
+    // 検索窓に入力があった場合に検索用メソッドが動く
+    // ページャーを付けた都合上このやり方では動かない
+    if (!empty($get['search'])) {
+        $searchIns = new TodoItems;
+        $searchItems = $searchIns->dbSearch($get['search']);
+        $showMode = 's'; // searchモードって事
+        empty($searchItems) ? $_SESSION['err']['msg'] = '該当する検索結果はありません' : '';
+    } else {
+        // 検索窓が使用されていない場合登録されているToDoを全て取得する
+        $todoIns = new TodoItems;
+        $todoItems = $todoIns->dbAllSelect();
+        $showMode = 'a'; // allモードって事
+    }
 
+    define('MAX', '4'); // 最大表示レコード数の設定defineでMAXという定数を作成し4を設定した
+    $itemsCount = count($todoItems); // 取得したレコードのトータル件数
+    $maxPage = ceil($itemsCount / MAX); // 最大ページ数(ceilは小数点切り捨て)
 
-// デバッグ用 //
-var_dump($todoItems);
-exit();
-////////////////
+    if (!isset($_GET['page_num'])) { // $_GET['page_num'] はURLに渡された現在のページ数
+        $now = 1; // 設定されてない場合は1ページ目にする
+    } else {
+        $now = $_GET['page_num']; // 既に$_GET['page_num']にページ数があるならそれを代入する
+    }
+
+    // デバッグ用 //
+    echo '$nowの中身<br>';
+    var_dump($now);
+    echo '<br>';
+    ////////////////
+
+    $start_num = ($now - 1) * MAX; // 配列の何番目から取得すればよいか
+
+    // array_sliceは、配列の何番目($start_num)から何番目(MAX)まで切り取る関数
+    $dispData = array_slice($todoItems, $start_num, MAX, true);
+} catch (Exception $e) {
+    header('Location:../error/error.php');
+    exit();
+}
+
 
 ?>
 
@@ -33,6 +73,7 @@ exit();
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- nes.cssの読み込み -->
+    <!-- <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" /> -->
     <link href="https://unpkg.com/nes.css@latest/css/nes.min.css" rel="stylesheet" />
     <!-- bootstrapの読み込み -->
     <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous"> -->
@@ -76,16 +117,49 @@ exit();
                 </li>
             </ul>
             <form class="form-inline my-2 my-lg-0" action="./" method="get">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search" value="">
-                <button class="btn btn-outline-light my-2 my-sm-0" type="submit">検索</button>
+                <!-- 今は使用できません、ToDo一覧の表示の仕方を変更する必要がある -->
+                <input disabled class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search" maxlength="100">
+                <button disabled class="btn btn-outline-light my-2 my-sm-0" type="submit">検索</button>
             </form>
         </div>
     </nav>
     <!-- ナビゲーション ここまで -->
 
-    <!-- コンテナ -->
-    <div class="container">
+    <!-- フシギダネの msg 表示 -->
+    <!-- err msg ある場合 -->
+    <div class="row my-2">
+        <?php if (isset($_SESSION['err']['msg'])) : ?>
+            <div class="col-sm-3"></div>
+            <div class="col-sm-6 alert alert-danger alert-dismissble fade show">
+                <button class="close" data-dismiss="alert">&times;</button>
+                <!-- 吹き出し -->
+                <div class="nes-balloon from-right">
+                    <p><?= $_SESSION['err']['msg'] ?></p>
+                </div>
+                <i class="nes-bulbasaur"></i>
+            </div>
+            <div class="col-sm-3"></div>
+        <?php endif ?>
+    </div>
+    <!-- success msg ある場合 -->
+    <div class="row my-2">
+        <?php if (isset($_SESSION['success']['msg'])) : ?>
+            <div class="col-sm-3"></div>
+            <div class="col-sm-6 alert alert-info alert-dismissble fade show">
+                <button class="close" data-dismiss="alert">&times;</button>
+                <!-- 吹き出し -->
+                <div class="nes-balloon from-right">
+                    <p><?= $_SESSION['success']['msg'] ?></p>
+                </div>
+                <i class="nes-bulbasaur"></i>
+            </div>
+            <div class="col-sm-3"></div>
+        <?php endif ?>
+    </div>
+    <!-- フシギダネの msg 表示 ここまで -->
 
+    <!-- ToDoを表示させるコンテナ -->
+    <div class="container">
         <table class="table table-striped table-hover table-sm my-2">
             <thead>
                 <tr>
@@ -99,43 +173,113 @@ exit();
             </thead>
 
             <tbody>
+                <!-- searchした時のToDo表示 -->
+                <?php if ($showMode == 's') : ?>
+                    <?php foreach ($searchItems as $searchItem => $v) : ?>
+                        <tr class=<?= isset($v['finished_date']) ? 'del' : '' ?> <?= $v['expire_date'] <= $datetime ? 'text-danger' : '' ?>>
+                            <td class="align-middle">
+                                <?= $v['item_name'] ?>
+                            </td>
+                            <td class="align-middle">
+                                <?= $v['family_name'] . $v['first_name'] ?> </td>
+                            <td class="align-middle">
+                                <?= $v['registration_date'] ?> </td>
+                            <td class="align-middle">
+                                <?= $v['expire_date'] ?> </td>
+                            <td class="align-middle">
+                                <?= $v['finished_date'] ?> </td>
+                            <td class="align-middle button">
+                                <form action="./complete.php" method="post" class="my-sm-1">
+                                    <input type="hidden" name="item_id" value=<?= $v['id'] ?>>
+                                    <input type="hidden" name="finished_date" value=<?= $datetime ?>>
+                                    <button class="btn btn-primary my-0" type="submit">完了</button>
+                                </form>
+                                <form action="./edit.php" method="post" class="my-sm-1">
+                                    <input type="hidden" name="item_id" value=<?= $v['id'] ?>>
+                                    <input type="hidden" name="user_id" value=<?= $v['user_id'] ?>>
+                                    <input type="hidden" name="finished_date" value=<?= $v['finished_date'] ?>>
+                                    <input class="btn btn-success my-0" type="submit" value="修正">
+                                </form>
+                                <form action="./delete.php" method="post" class="my-sm-1">
+                                    <input type="hidden" name="item_id" value=<?= $v['id'] ?>>
+                                    <input class="btn btn-danger my-0" type="submit" value="削除">
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach ?>
+                <?php endif ?>
 
-                <?php foreach ($todoItems as $todoItem => $v) : ?>
-                    <tr>
-                        <td class="align-middle">
-                            <?= $v['item_name'] ?>
-                        </td>
-                        <td class="align-middle">
-                            <?= $v['family_name'] . $v['first_name'] ?> </td>
-                        <td class="align-middle">
-                            <?= $v['registration_date'] ?> </td>
-                        <td class="align-middle">
-                            <?= $v['expire_date'] ?> </td>
-                        <td class="align-middle">
-                            <?= $v['finished_date'] ?> </td>
-                        <td class="align-middle button">
-                            <form action="./complete.php" method="post" class="my-sm-1">
-                                <input type="hidden" name="item_id" value=<?= $v['id'] ?>>
-                                <button class="btn btn-primary my-0" type="submit">完了</button>
-                            </form>
-                            <form action="edit.php" method="post" class="my-sm-1">
-                                <input type="hidden" name="item_id" value=<?= $v['id'] ?>>
-                                <input class="btn btn-primary my-0" type="submit" value="修正">
-                            </form>
-                            <form action="delete.php" method="post" class="my-sm-1">
-                                <input type="hidden" name="item_id" value=<?= $v['id'] ?>>
-                                <input class="btn btn-primary my-0" type="submit" value="削除">
-                            </form>
-
-
-                        </td>
-                    </tr>
-                <?php endforeach ?>
-
+                <!-- ToDo通常表示 -->
+                <?php if ($showMode == 'a') : ?>
+                    <?php foreach ($dispData as $data => $v) : ?>
+                        <tr class=<?= isset($v['finished_date']) ? 'del' : '' ?> <?= $v['expire_date'] <= $datetime ? 'text-danger' : '' ?>>
+                            <td class="align-middle">
+                                <?= $v['item_name'] ?>
+                            </td>
+                            <td class="align-middle">
+                                <?= $v['family_name'] . $v['first_name'] ?> </td>
+                            <td class="align-middle">
+                                <?= $v['registration_date'] ?> </td>
+                            <td class="align-middle">
+                                <?= $v['expire_date'] ?> </td>
+                            <td class="align-middle">
+                                <?= $v['finished_date'] ?> </td>
+                            <td class="align-middle button">
+                                <form action="./complete.php" method="post" class="my-sm-1">
+                                    <input type="hidden" name="item_id" value=<?= $v['id'] ?>>
+                                    <input type="hidden" name="finished_date" value=<?= $datetime ?>>
+                                    <button class="btn btn-primary my-0" type="submit">完了</button>
+                                </form>
+                                <form action="./edit.php" method="post" class="my-sm-1">
+                                    <input type="hidden" name="item_id" value=<?= $v['id'] ?>>
+                                    <input type="hidden" name="user_id" value=<?= $v['user_id'] ?>>
+                                    <input type="hidden" name="finished_date" value=<?= $v['finished_date'] ?>>
+                                    <input class="btn btn-success my-0" type="submit" value="修正">
+                                </form>
+                                <form action="./delete.php" method="post" class="my-sm-1">
+                                    <input type="hidden" name="item_id" value=<?= $v['id'] ?>>
+                                    <input class="btn btn-danger my-0" type="submit" value="削除">
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach ?>
+                <?php endif ?>
             </tbody>
         </table>
+        <!-- ページャー -->
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                <li class="page-item">
+                    <?php if ($now == 1) : ?>
+                        <span class="page-link text-secondary" aria-hidden="true">&laquo;</span>
+                    <?php else : ?>
+                        <a class="page-link" href="./index.php?page_num=<?= $now - 1 ?>" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    <?php endif ?>
+                </li>
+                <!-- リンクを最大ページ数まで作成する -->
+                <?php for ($i = 1; $i <= $maxPage; $i++) {
+                    // echo使いたくないなぁ
+                    echo "<li class='page-item'><a class='page-link' href='./index.php?page_num=$i'>{$i}</a></li>";
+                }
+                ?>
+                <li class="page-item">
+                    <?php if ($now >= $maxPage) : ?>
+                        <span class="page-link text-secondary" aria-hidden="true">&raquo;</span>
+                    <?php else : ?>
+                        <a class="page-link" href="./index.php?page_num=<?= $now + 1 ?>" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    <?php endif ?>
+                </li>
+            </ul>
+        </nav>
     </div>
-    <!-- コンテナ ここまで -->
+    <!-- ToDoを表示させるコンテナ ここまで -->
+
+    <!-- 表示させたメッセージは最後に消しておく -->
+    <?php unset($_SESSION['err'], $_SESSION['success']) ?>
 
     <!-- 必要なJavascriptを読み込む -->
     <!-- <script src="../js/jquery-3.4.1.min.js"></script> -->

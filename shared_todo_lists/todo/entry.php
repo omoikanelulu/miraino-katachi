@@ -1,16 +1,20 @@
 <?php
-require_once('../class/db/Base.php');
-require_once('../class/db/Users.php');
-require_once('../class/db/TodoItems.php');
-require_once('../class/util/Security.php');
-require_once('../class/util/Config.php');
-Security::session();
-Security::notLogin();
-$datetime = Config::dateTime();
+try {
+    require_once('../class/db/Base.php');
+    require_once('../class/db/Users.php');
+    require_once('../class/db/TodoItems.php');
+    require_once('../class/util/Security.php');
+    require_once('../class/util/Config.php');
+    Security::session();
+    Security::notLogin();
+    $datetime = Config::dateTime();
 
-$userIns = new Users;
-$userInfo = $userIns->dbAllSelect();
-
+    $userIns = new Users;
+    $userInfo = $userIns->dbAllSelect();
+} catch (Exception $e) {
+    header('Location:../error/error.php');
+    exit();
+}
 
 ?>
 
@@ -66,7 +70,7 @@ $userInfo = $userIns->dbAllSelect();
                 </li>
             </ul>
             <form class="form-inline my-2 my-lg-0" action="./" method="get">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search" value="">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search" maxlength="100">
                 <button class="btn btn-outline-light my-2 my-sm-0" type="submit">検索</button>
             </form>
         </div>
@@ -86,10 +90,12 @@ $userInfo = $userIns->dbAllSelect();
 
             <!-- エラーメッセージ -->
             <div class="row my-2">
-                <?php if (isset($_SESSION['err']['msg'])) : ?>
+                <?php if (!empty($_SESSION['err'])) : ?>
                     <div class="col-sm-3"></div>
                     <div class="col-sm-6 alert alert-danger alert-dismissble fade show">
-                        <p><?= $_SESSION['err']['msg'] ?></p>
+                        <?php foreach ($_SESSION['err'] as $err => $v) : ?>
+                            <p><?= $v . '<br>' ?></p>
+                        <?php endforeach ?>
                         <button class="close" data-dismiss="alert">&times;</button>
                     </div>
                     <div class="col-sm-3"></div>
@@ -110,6 +116,7 @@ $userInfo = $userIns->dbAllSelect();
                             <label for="user_id">担当者</label>
                             <select name="user_id" id="user_id" class="form-control">
                                 <option value="">--選択してください--</option>
+                                <option value="100">--登録されていない担当者--</option>
                                 <?php foreach ($userInfo as $key => $v) : ?>
                                     <option value=<?= $v['id'] ?>><?= $v['family_name'] . $v['first_name'] ?></option>
                                 <?php endforeach ?>
@@ -120,8 +127,8 @@ $userInfo = $userIns->dbAllSelect();
                             <input type="date" class="form-control" id="expire_date" name="expire_date" value=<?= $datetime ?>>
                         </div>
                         <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" id="finished" name="finished">
-                            <label for="finished">完了</label>
+                            <input type="checkbox" class="form-check-input" id="finished_date" name="finished_date" value=<?= $datetime ?>>
+                            <label for="finished_date">完了</label>
                         </div>
                         <input type="hidden" name="registration_date" value=<?= $datetime ?>>
                         <input type="submit" value="登録" class="btn btn-primary">

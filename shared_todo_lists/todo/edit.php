@@ -1,10 +1,60 @@
 <?php
-require_once('../class/db/Base.php');
-require_once('../class/db/Users.php');
-require_once('../class/db/TodoItems.php');
-require_once('../class/util/Security.php');
-Security::session();
-Security::notLogin();
+try {
+    require_once('../class/db/Base.php');
+    require_once('../class/db/Users.php');
+    require_once('../class/db/TodoItems.php');
+    require_once('../class/util/Security.php');
+    require_once('../class/util/Config.php');
+    Security::session();
+    Security::notLogin();
+    $token = Security::makeToken();
+    $datetime = Config::dateTime();
+
+    // エラーメッセージを配列から変数に入れる(これいる？)
+    if (isset($_SESSION['err'])) {
+        foreach ($_SESSION['err'] as $key => $v) {
+            $errMsg[] = $v;
+        }
+    }
+
+
+
+
+    /**
+     * DBからToDoのレコードを取得する取得する
+     * レコードのitem_idを$_POSTで受け取った値にするか
+     * $_SESSIONに保存した値にするかの二択で条件分岐させている
+     */
+    $todoIns = new TodoItems;
+    if (isset($_SESSION['post']['item_id'])) {
+        $item_id = $_SESSION['post']['item_id'];
+    } else {
+        $item_id = $_POST['item_id'];
+    }
+    // 引数の中身を条件分岐で変える事で必要なレコードを取得している
+    $todoItem = $todoIns->dbConfirmation($item_id);
+
+
+    ////////////////
+    // デバッグ用 //
+    // echo '$_POSTの中身';
+    // var_dump($_POST);
+    // echo '<br>';
+    // echo '$todoItem["id"]の中身';
+    // var_dump($todoItem['id']);
+    // echo '<br>';
+    // echo '$_SESSION["post"]の中身';
+    // var_dump($_SESSION['post']);
+    // echo '<br>';
+    ////////////////
+
+
+    $userIns = new Users;
+    $userInfos = $userIns->dbAllSelect();
+} catch (Exception $e) {
+    header('Location:../error/error.php');
+    exit();
+}
 
 ?>
 
@@ -60,7 +110,7 @@ Security::notLogin();
                 </li>
             </ul>
             <form class="form-inline my-2 my-lg-0" action="./" method="get">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search" value="">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search" maxlength="100">
                 <button class="btn btn-outline-light my-2 my-sm-0" type="submit">検索</button>
             </form>
         </div>
@@ -79,11 +129,14 @@ Security::notLogin();
 
         <!-- エラーメッセージ -->
         <div class="row my-2">
-            <div class="col-sm-3"></div>
-            <div class="col-sm-6 alert alert-danger alert-dismissble fade show">
-                担当者を選択してください。 <button class="close" data-dismiss="alert">&times;</button>
-            </div>
-            <div class="col-sm-3"></div>
+            <?php if (isset($errMsg)) : ?>
+                <div class="col-sm-3"></div>
+                <div class="col-sm-6 alert alert-danger alert-dismissble fade show">
+                    <p><?= (implode("<br>", $errMsg)) ?></p>
+                    <button class="close" data-dismiss="alert">&times;</button>
+                </div>
+                <div class="col-sm-3"></div>
+            <?php endif ?>
         </div>
         <!-- エラーメッセージ ここまで -->
 
@@ -94,24 +147,30 @@ Security::notLogin();
                 <form action="./edit_action.php" method="post">
                     <div class="form-group">
                         <label for="item_name">項目名</label>
-                        <input type="text" name="item_name" id="item_name" class="form-control" value="テストの項目３">
+                        <input type="text" name="item_name" id="item_name" class="form-control" value=<?= isset($_SESSION['post']['item_name']) ? $_SESSION['post']['item_name'] : $todoItem['item_name'] ?>>
                     </div>
                     <div class="form-group">
                         <label for="user_id">担当者</label>
                         <select name="user_id" id="user_id" class="form-control">
-                            <option value="">--選択してください--</option>
-                            <option value="1" selected>テスト花子</option>
-                            <option value="2">テスト太郎</option>
+                            <!-- ToDoに登録されている担当者を表示する -->
+                            <option value=<?= $todoItem['user_id'] ?>><?= $todoItem['family_name'] . $todoItem['first_name'] ?></option>
+                            <option value="">-- 登録されていない担当者 --</option>
+                            <!-- DBに登録されているユーザを表示する -->
+                            <?php foreach ($userInfos as $userInfo => $v) : ?>
+                                <option value=<?= $v['id'] ?>><?= $v['family_name'] . $v['first_name'] ?></option>
+                            <?php endforeach ?>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="expire_date">期限</label>
-                        <input type="date" class="form-control" id="expire_date" name="expire_date" value="2020-02-24">
+                        <input type="date" class="form-control" id="expire_date" name="expire_date" value=<?= isset($_SESSION['post']['expire_date']) ? $_SESSION['post']['expire_date'] : $todoItem['expire_date'] ?>>
                     </div>
                     <div class="form-group form-check">
-                        <input type="checkbox" class="form-check-input" id="finished" name="finished" value="1">
-                        <label for="finished">完了</label>
+                        <input type="checkbox" class="form-check-input" id="finished_date" name="finished_date" value=<?= $datetime ?><?= !is_null($todoItem['finished_date']) ? " checked" : "" ?>>
+                        <label for="finished_date">完了</label>
                     </div>
+                    <input type="hidden" name="item_id" value="<?= $todoItem['id'] ?>">
+                    <input type="hidden" name="token" value="<?= $token ?>">
 
                     <input type="submit" value="更新" class="btn btn-primary">
                     <input type="button" value="キャンセル" class="btn btn-outline-primary" onclick="location.href='./';">

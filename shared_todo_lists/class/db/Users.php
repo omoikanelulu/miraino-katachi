@@ -14,9 +14,16 @@ class Users extends Base
      */
     public function dbAllSelect(): array
     {
-        $sql = 'SELECT * FROM users ORDER BY id ASC';
+        // $sql = 'SELECT * FROM users ORDER BY id ASC';
+        $sql = 'SELECT';
+        $sql .= ' id';
+        $sql .= ',family_name';
+        $sql .= ',first_name';
+        $sql .= ' FROM users';
+        $sql .= ' ORDER BY id ASC';
 
         $stmt = $this->dbh->prepare($sql);
+
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -84,24 +91,27 @@ class Users extends Base
 
     /**
      * user情報を登録
-     * @param array $post サニタイズ済みのデータ
+     * @param array $post サニタイズ済みの配列データ
      * @return bool true
      */
-    public function dbAdd($post): bool
+    public function dbUserAdd($post): bool
     {
         // passをハッシュ化する
         $post['pass'] = password_hash($post['pass'], PASSWORD_DEFAULT);
 
-        $sql = 'INSERT INTO users (user, pass, name) VALUES(:user, :pass, :name)';
+        $sql = 'INSERT INTO';
+        $sql .= ' users (user, pass, family_name, first_name, is_admin, is_deleted)';
+        $sql .= ' VALUES(:user, :pass, :family_name, :first_name, :is_admin, :is_deleted)';
 
         $stmt = $this->dbh->prepare($sql);
         $stmt->bindValue(':user', $post['user'], PDO::PARAM_STR);
         $stmt->bindValue(':pass', $post['pass'], PDO::PARAM_STR);
-        // $stmt->bindValue(':name', $post['name'], PDO::PARAM_STR);
+        $stmt->bindValue(':family_name', $post['family_name'], PDO::PARAM_STR);
+        $stmt->bindValue(':first_name', $post['first_name'], PDO::PARAM_STR);
+        $stmt->bindValue(':is_admin', $post['is_admin'], PDO::PARAM_INT);
+        $stmt->bindValue(':is_deleted', $post['is_deleted'], PDO::PARAM_INT);
 
         $stmt->execute();
-
-        $_SESSION['success']['msg'] = '登録完了しました';
 
         return true;
     }

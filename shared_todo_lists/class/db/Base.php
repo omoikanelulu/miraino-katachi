@@ -8,7 +8,7 @@ class Base
     const DB_NAME = 'todo';
     const DB_HOST = 'localhost';
     const DB_USER = 'root';
-    const DB_PASS = '0971790';
+    const DB_PASS = '●●';
 
     protected $dbh;
 

@@ -3,10 +3,12 @@ try {
     require_once('../class/db/Base.php');
     require_once('../class/db/Users.php');
     require_once('../class/util/Security.php');
-    Security::session();
-    $token = Security::makeToken();
 
-    unset($_SESSION['data'], $_SESSION['err']);
+    unset($_SESSION['data'], $_SESSION['err'], $_SESSION['success']);
+
+    Security::session();
+    // トークンを作成し$_SESSION['token']に保存する
+    $p_token = Security::makeToken(); // POSTするトークンを代入
 
     // デバッグ用 //
     echo '<p>$_SESSIONの中身を表示</p>';
@@ -50,15 +52,6 @@ try {
     </nav>
 
     <div class="container">
-        <!-- これいらなくね？ -->
-        <!-- <div class="row my-2">
-            <div class="col-sm-3"></div>
-            <div class="col-sm-3">
-                <h1></h1>
-            </div>
-            <div class="col-sm-3"></div>
-        </div> -->
-
         <div class="row my-2">
             <?php if (!isset($_SESSION['user'])) : ?>
                 <div class="col-sm-3"></div>
@@ -92,7 +85,7 @@ try {
             <div class="col-sm-3"></div>
             <div class="col-sm-6">
                 <form action="./login.php" method="post">
-                    <input type="hidden" name="token" value="<?= $token ?>">
+                    <input type="hidden" name="token" value="<?= $p_token ?>">
                     <div class="form-group">
                         <label for="user">ユーザー名</label>
                         <input type="text" class="form-control" id="user" name="user">
@@ -120,7 +113,10 @@ try {
         <div class="row my-2">
             <div class="col-sm-3"></div>
             <div class="col-sm-6">
-                <a href="./user_add.php"><button type="submit" class="btn btn-info">ユーザ登録</button></a>
+                <form action="./user_add.php" method="post">
+                    <input type="hidden" name="token" value="<?= $p_token ?>">
+                    <button type="submit" class="btn btn-info">ユーザ登録</button>
+                </form>
             </div>
             <div class="col-sm-3"></div>
         </div>

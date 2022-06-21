@@ -1,7 +1,7 @@
 <?php
 require_once('../class/util/Security.php');
 Security::session();
-Security::notLogin();
+// Security::notLogin();
 ?>
 
 <!DOCTYPE html>
@@ -36,39 +36,28 @@ Security::notLogin();
     </nav>
 
     <div class="container">
+        <!-- エラーメッセージ -->
         <div class="row my-2">
             <div class="col-sm-3"></div>
-            <div class="col-sm-3">
-                <h1></h1>
+            <div class="col-sm-6 alert alert-danger alert-dismissble fade show">
+                <p>
+                    申し訳ございません。<br>
+                    エラーが発生しました。
+                </p>
+                <br>
+                <?php if (!empty($_SESSION['err']['msg'])) : ?>
+                    <p><?= $_SESSION['err']['msg'] ?></p>
+                <?php endif ?>
+                <?php if (!empty($_SESSION['err']['e'])) : ?>
+                    <p><?= $_SESSION['err']['e'] ?></p>
+                <?php endif ?>
+                <a href="../login/logout.php">
+                    <p class="btn btn-danger">ログアウト</p>
+                </a>
             </div>
             <div class="col-sm-3"></div>
         </div>
-
-        <div class="row my-2">
-            <div class="col-sm-3"></div>
-            <div class="col-sm-6">
-                <!-- エラーメッセージ -->
-                <div class="row my-2">
-                    <div class="col-sm-3"></div>
-                    <div class="col-sm-6 alert alert-danger alert-dismissble fade show">
-                        <p>
-                            申し訳ございません。<br>
-                            エラーが発生しました。
-                        </p>
-                        <br>
-                        <?php if (!empty($_SESSION['err']['msg'])) : ?>
-                            <p><?= $_SESSION['err']['msg'] ?></p>
-                        <?php endif ?>
-                        <a href="../login/logout.php">
-                            <p class="btn btn-danger">ログアウト</p>
-                        </a>
-                    </div>
-                    <div class="col-sm-3"></div>
-                </div>
-                <!-- エラーメッセージ ここまで -->
-            </div>
-            <div class="col-sm-3"></div>
-        </div>
+        <!-- エラーメッセージ ここまで -->
 
     </div>
 

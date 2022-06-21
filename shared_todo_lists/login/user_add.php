@@ -5,7 +5,13 @@ try {
     require_once('../class/util/Security.php');
 
     Security::session();
-    $token = Security::makeToken();
+    if (!Security::checkToken($_POST['token'])) {
+        $_SESSION['err']['msg'] = '不正なアクセスです なぜにここでアウト？';
+        header('Location: ../error/error.php');
+        exit();
+    }
+
+    $p_token = Security::makeToken();
 
     // パスワード不一致時のエラーメッセージを代入
     if (isset($_SESSION['err']['pass']) ? $errMsg = $_SESSION['err']['pass'] : $errMsg = '');
@@ -17,8 +23,10 @@ try {
     if (isset($_SESSION['data']['is_admin']) ? $is_admin = 'checked="checked"' : $is_admin = '');
 
     // デバッグ用 //
-    echo '<p>$_SESSIONの中身を表示</p>';
-    var_dump($_SESSION);
+    // echo '<p>$_SESSIONの中身を表示</p>';
+    // var_dump($_SESSION);
+    // echo '<p>$_POSTの中身を表示</p>';
+    // var_dump($_POST);
     ////////////////
 } catch (Exception $e) {
     header('Location:../error/error.php');
@@ -93,7 +101,7 @@ try {
         <div class="col-sm-3"></div>
         <div class="col-sm-6">
             <form action="./user_add_check.php" method="post">
-                <input type="hidden" name="token" value="<?= $token ?>">
+                <input type="hidden" name="token" value="<?= $p_token ?>">
                 <div class="form-group">
                     <label for="user">ユーザー名</label>
                     <input type="text" class="form-control" id="user" name="user" value="<?= $user ?>">
@@ -116,6 +124,7 @@ try {
                     <input type="text" class="form-control" id="first_name" name="first_name" value="<?= $first_name ?>">
                 </div>
                 <div class="form-group form-check">
+                    <input type="hidden" value="0" id="is_admin" name="is_admin">
                     <input type="checkbox" value="1" <?= $is_admin ?> class="form-check-input" id="is_admin" name="is_admin">
                     <label for="is_admin">管理者権限を与える</label>
                 </div>

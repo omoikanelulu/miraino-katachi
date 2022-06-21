@@ -4,28 +4,29 @@ try {
     require_once('../class/db/Users.php');
     require_once('../class/util/Security.php');
 
-    $token = Security::makeToken();
-
     unset($_SESSION['err']['pass'], $_SESSION['err']['msg']);
 
     Security::session();
     if (!Security::checkToken($_POST['token'])) {
-        $_SESSION['err']['msg'] = 'ワンタイムトークンが一致しません';
-        header('Location:../error/error.php');
+        $_SESSION['err']['msg'] = '不正なアクセスです';
+        header('Location: ../error/error.php');
         exit();
     }
 
+    // POSTされてきたデータをサニタイズして$postへ代入
     $post = Security::sanitize($_POST);
+    // $postを$_SESSION['data']へ保存
     $_SESSION['data'] = $post;
-
     // 項目のチェック
     $hasErr = '';
+    // パスワードの入力間違いチェック
     if ($post['pass'] != $post['pass2']) {
         $_SESSION['err']['pass'] = 'パスワードが一致しません';
         $hasErr = true;
     }
+    // 値に空の物がないかチェック
     foreach ($post as $key => $v) {
-        if ($key == 'token' || $key == 'is_admin') {
+        if ($key == 'token') {
             continue;
         } elseif (empty($v) == true) {
             $hasErr = true;
@@ -35,7 +36,7 @@ try {
     }
     // 項目のチェック ここまで
 
-    // user_addにリダイレクト
+    // 項目のチェックでNGだった場合、user_addにリダイレクト
     if ($hasErr == true) {
         header('location:./user_add.php');
         exit();
@@ -46,10 +47,6 @@ try {
     header('Location:../error/error.php');
     exit();
 }
-
-var_dump($_SESSION['err']['msg']);
-echo '<br>';
-var_dump($_SESSION['err']['pass']);
 
 ?>
 
@@ -107,32 +104,38 @@ var_dump($_SESSION['err']['pass']);
             <div class="alert alert-info">
                 <h4>下記の情報を登録します</h4>
             </div>
-            <form action="./user_add_action.php" method="post">
-                <input type="hidden" name="token" value="<?= $token ?>">
-                <div class="form-group">
-                    <label for="user">ユーザー名</label>
-                    <input disabled type="text" class="form-control" id="user" name="user" value="<?= $post['user'] ?>">
-                </div>
-                <div class="form-group">
-                    <label for="pass">パスワード</label>
-                    <input disabled type="password" class="form-control" id="pass" name="pass" value="<?= $post['pass'] ?>">
-                </div>
-                <div class="form-group">
-                    <label for="family_name">性</label>
-                    <input disabled type="text" class="form-control" id="family_name" name="family_name" value="<?= $post['family_name'] ?>">
-                </div>
-                <div class="form-group">
-                    <label for="first_name">名</label>
-                    <input disabled type="text" class="form-control" id="first_name" name="first_name" value="<?= $post['first_name'] ?>">
-                </div>
-                <div class="form-group form-check">
-                    <input disabled type="checkbox" value="1" <?= $is_admin ?> class="form-check-input" id="is_admin" name="is_admin">
-                    <label for="is_admin">管理者権限を与える</label>
-                </div>
-                <br>
-                <button type="submit" class="btn btn-primary">登録</button>
-                <input type="button" value="キャンセル" class="btn btn-outline-primary" onclick="location.href='./user_add.php';">
-            </form>
+            <!-- <form action="./user_add_action.php" method="post"> -->
+            <div class="form-group">
+                <label for="user">ユーザー名</label>
+                <input disabled type="text" class="form-control" id="user" name="user" value="<?= $post['user'] ?>">
+            </div>
+            <div class="form-group">
+                <label for="pass">パスワード</label>
+                <input disabled type="password" class="form-control" id="pass" name="pass" value="<?= $post['pass'] ?>">
+            </div>
+            <div class="form-group">
+                <label for="family_name">性</label>
+                <input disabled type="text" class="form-control" id="family_name" name="family_name" value="<?= $post['family_name'] ?>">
+            </div>
+            <div class="form-group">
+                <label for="first_name">名</label>
+                <input disabled type="text" class="form-control" id="first_name" name="first_name" value="<?= $post['first_name'] ?>">
+            </div>
+            <div class="form-group form-check">
+                <input disabled type="checkbox" <?= $is_admin ?> class="form-check-input" id="is_admin" name="is_admin">
+                <label for="is_admin">管理者権限を与える</label>
+            </div>
+            <br>
+            <button type="submit" class="btn btn-primary" onclick="location.href='./user_add_action.php'">登録</button>
+            <input type="button" value="キャンセル" class="btn btn-outline-primary" onclick="location.href='./user_add.php';">
+
+                <!-- <script type="text/javascript">
+                    document.write('<input type="button" value=" 戻る " onClick="history.back()">');
+                </script>
+                <a href="～">サイトトップに戻る</a><br>
+                <a href="～">カテゴリトップに戻る</a><br> -->
+
+                <!-- </form> -->
         </div>
         <div class="col-sm-3"></div>
     </div>

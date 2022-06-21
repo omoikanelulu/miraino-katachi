@@ -19,6 +19,8 @@ class Security
     {
         if (empty($_SESSION['user'])) {
             header('Location:./index.php');
+            // header('Location:../login/index.php');
+            exit();
         }
     }
 
@@ -40,6 +42,7 @@ class Security
      */
     public static function checkToken($p_token): bool
     {
+        // ここが怪しいのかも
         if (!isset($_SESSION['token']) || $_SESSION['token'] !== $p_token) {
             return false;
         }

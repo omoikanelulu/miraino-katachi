@@ -100,8 +100,8 @@ class Users extends Base
         $post['pass'] = password_hash($post['pass'], PASSWORD_DEFAULT);
 
         $sql = 'INSERT INTO';
-        $sql .= ' users (user, pass, family_name, first_name, is_admin, is_deleted)';
-        $sql .= ' VALUES(:user, :pass, :family_name, :first_name, :is_admin, :is_deleted)';
+        $sql .= ' users (user, pass, family_name, first_name, is_admin)';
+        $sql .= ' VALUES(:user, :pass, :family_name, :first_name, :is_admin)';
 
         $stmt = $this->dbh->prepare($sql);
         $stmt->bindValue(':user', $post['user'], PDO::PARAM_STR);
@@ -109,7 +109,6 @@ class Users extends Base
         $stmt->bindValue(':family_name', $post['family_name'], PDO::PARAM_STR);
         $stmt->bindValue(':first_name', $post['first_name'], PDO::PARAM_STR);
         $stmt->bindValue(':is_admin', $post['is_admin'], PDO::PARAM_INT);
-        $stmt->bindValue(':is_deleted', $post['is_deleted'], PDO::PARAM_INT);
 
         $stmt->execute();
 
